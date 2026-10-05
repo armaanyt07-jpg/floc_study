@@ -1,0 +1,18 @@
+# Python 3.12
+# Core pipeline and models
+numpy==2.5.3
+scipy==1.18.1
+pandas==3.0.6
+pyarrow==25.0.1
+scikit-learn==1.9.1
+joblib==1.6.0
+h5py==3.16.0
+matplotlib==3.11.2
+pillow==12.3.0
+
+# Downloading only the needed files from the 2.5 GB archive
+remotezip==0.12.6
+
+# Rebuilding the write-up PDF (deliverables/source/build_writeup.py)
+reportlab==5.0.1
+pypdf==6.19.0

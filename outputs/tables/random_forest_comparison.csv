@@ -1,0 +1,15 @@
+test,data,hold-out method,n,our r2,our RMSE (um),paper,paper r2
+"class-paper RF (d50, 32 trees)",all seasons,random 70/30,1200,0.6,20.9,class paper RF,0.81
+"class-paper SVR (d50, C=2048, eps=4)",all seasons,random 70/15/15,1200,0.53,22.4,class paper SVR,0.76
+"class-paper RF (sigma2, 32 trees)",all seasons,random 70/30,1200,0.56,516.5,class paper RF,0.75
+our features,Summer,random 70/30,427,0.33,19.1,,
+our features,Summer,time-blocked,427,-0.33,26.8,"journal (LASSO, in-sample)",0.15-0.51
+our features,Winter,random 70/30,406,0.47,8.8,,
+our features,Winter,time-blocked,406,-0.52,15.7,"journal (LASSO, in-sample)",0.45-0.65
+our features,Spring,random 70/30,287,0.45,13.5,,
+our features,Spring,time-blocked,287,-0.14,19.6,"journal (LASSO, in-sample)",0.15-0.46
+our features,All seasons,random 70/30,1120,0.64,14.6,,
+our features,All seasons,time-blocked,1120,0.34,19.8,,
+our features,predict Summer,leave-one-season-out,427,-0.12,24.6,,
+our features,predict Winter,leave-one-season-out,406,-3.85,28.1,,
+our features,predict Spring,leave-one-season-out,287,-4.57,43.2,,

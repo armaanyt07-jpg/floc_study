@@ -1,0 +1,28 @@
+# Raw data (786 MB, re-download with download_data.py)
+Data/
+zip_data.txt
+
+# Python environment and caches
+ven/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Node (only needed to rebuild the slides)
+node_modules/
+package-lock.json
+
+# Regenerable outputs (scripts/run_all_models.py rebuilds them)
+outputs/models/
+outputs/logs/
+outputs/archive_v1_tailclip/
+outputs/cache/*
+!outputs/cache/features.parquet
+
+# Scratch
+test.py
+
+# OS files
+.DS_Store
