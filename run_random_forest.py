@@ -9,7 +9,7 @@ Each row trains a random forest on one subset of the data and scores it on data 
 did not train on, using one of three ways of holding data out:
   random 70/30          test hours scattered among training hours (class-paper method;
                         optimistic because neighbouring hours are nearly identical)
-  time-blocked          whole multi-day stretches held out, 12 h gap (honest forecast test)
+  time-blocked          whole multi-day stretches held out, 12 h gap (closest to real forecasting)
   leave-one-season-out  train on two seasons, test on the third (new-conditions test)
 """
 import argparse

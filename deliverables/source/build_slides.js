@@ -1,5 +1,6 @@
 // Builds deliverables/Floc_Size_Prediction_Slides.pptx
-// Run: NODE_PATH=<dir with pptxgenjs> node deliverables/source/build_slides.js <apply_theme.js path>
+// Run: node deliverables/source/build_slides.js [theme-helper.js]
+// Requires pptxgenjs (npm install pptxgenjs). The optional helper writes the colour theme into the file.
 const path = require("path");
 const pptxgen = require("pptxgenjs");
 
@@ -25,7 +26,7 @@ const pres = new pptxgen();
 pres.layout = "LAYOUT_16x9"; // 10 x 5.625 in
 pres.theme = { headFontFace: THEME.headFontFace, bodyFontFace: THEME.bodyFontFace };
 pres.title = "Predicting floc size in South San Francisco Bay";
-pres.author = "ML Mini Project";
+pres.author = "ML Mini Project, Team 7";
 const C = pres.SchemeColor;
 
 // ---------------------------------------------------------------- layouts
@@ -116,9 +117,9 @@ let s = pres.addSlide({ masterName: "TITLE_DARK", sectionTitle: "Introduction" }
 s.addText("Predicting Floc Size in South San Francisco Bay", { placeholder: "title" });
 s.addText([
   { text: "Can waves and currents alone tell us how big suspended mud particles are?", options: { breakLine: true } },
-  { text: "A physics-only replication of Egan et al. (2022) and Egan's CS229 study", options: { fontSize: 14 } },
+  { text: "A physics-only replication of Egan et al. (2022) and Egan's CS229 study", options: { fontSize: 14, breakLine: true } },
+  { text: "ML Mini Project, Team 7", options: { fontSize: 14, bold: true } },
 ], { placeholder: "body" });
-s.addNotes("Introduce the project: we try to predict the size of mud flocs in San Francisco Bay using only physical measurements, and we compare against a published journal paper and an internal class project by the same author.");
 
 // ================================================================ 2. Problem statement
 s = content("Problem statement", "Introduction");
@@ -141,13 +142,12 @@ prob.forEach(([h, b], i) => {
   text(s, [{ text: h, options: { bold: true, fontSize: 16, color: C.text2, breakLine: true } },
            { text: b, options: { fontSize: 14 } }], { x: 5.6, y: y - 0.02, w: 3.9, h: 1.05 });
 });
-s.addNotes("Frame it as a regression problem: tabular inputs, one continuous output. The key twist is the test: we care about new days and new seasons, not just a good fit.");
 
 // ================================================================ 3. Motivation
 pres.addSection({ title: "Background" });
 s = content("Why floc size matters", "Background");
 const mot = [
-  ["Settling speed", "Bigger flocs sink faster. Speed grows with diameter squared, so a 2x error in size is a 4x error in where mud settles."],
+  ["Settling speed", "Bigger flocs sink faster. Speed grows with diameter squared, so a 2x error in size is a 4x error in settling speed."],
   ["Coasts and ports", "Sediment models guide dredging, marsh restoration and sea-level defences. They need a settling speed that is rarely measured."],
   ["Pollutants and ecology", "Contaminants and algae travel on flocs, so floc size decides where they end up."],
 ];
@@ -158,10 +158,9 @@ mot.forEach(([h, b], i) => {
   text(s, [{ text: h, options: { bold: true, fontSize: 16, color: C.text2, breakLine: true } },
            { text: b, options: { fontSize: 14 } }], { x: x + 0.25, y: 2.08, w: 2.4, h: 1.9 });
 });
-text(s, [{ text: "The gap: ", options: { bold: true, color: C.accent2 } },
+text(s, [{ text: "The problem: ", options: { bold: true, color: C.accent2 } },
   { text: "most models assume one fixed floc size, yet our data shows it changes by about 3x within a single season." }],
   { x: 0.5, y: 4.3, w: 9.0, h: 0.6, fontSize: 15 });
-s.addNotes("Motivation for a CS audience: floc size is an input every sediment transport model needs, it varies a lot, and it is expensive to measure. A predictive model would be useful.");
 
 // ================================================================ 4. Theory
 s = content("How flocs grow and break", "Background");
@@ -195,11 +194,10 @@ text(s, bullets([
   "d: floc diameter (what we predict)",
   "ρf, ρ0: floc and water density",
   "g: gravity,  μ: water viscosity",
-  "Double d and the floc sinks about 4x faster",
+  "Double d at the same density and it sinks 4x faster",
 ], 12), { x: 6.05, y: 2.75, w: 3.3, h: 1.9 });
 text(s, "What theory predicts: strong waves give smaller flocs; strong tide 4 hours earlier brings larger ones.",
   { x: 0.5, y: 4.95, w: 8.3, h: 0.35, fontSize: 12, color: HEX.muted, italic: true });
-s.addNotes("Domain theory in one slide. Flocs are clumps of mud and organic matter. Three processes: aggregation, breakup by shear, and transport by the tide. Stokes law shows why size matters so much: settling speed scales with diameter squared.");
 
 // ================================================================ 5. Dataset
 pres.addSection({ title: "Approach" });
@@ -221,7 +219,6 @@ s.addTable([
   margin: 0.06, valign: "middle", objectName: "Instrument table" });
 text(s, "Not in the archive: chlorophyll and light-absorption (biology) sensors used by both papers.",
   { x: 4.7, y: 4.35, w: 4.8, h: 0.6, fontSize: 12, color: HEX.muted, italic: true });
-s.addNotes("Public dataset from the Stanford Digital Repository. We downloaded only the files we needed with HTTP range requests. Emphasise what is missing: the biology sensors.");
 
 // ================================================================ 6. Methodology
 s = content("From raw signals to a feature table", "Approach");
@@ -248,7 +245,6 @@ s.addTable([
   margin: 0.05, valign: "middle", objectName: "Feature table" });
 text(s, "Quality control: bursts with more than 10% bad current samples are dropped. Gaps are never filled.",
   { x: 4.1, y: 4.5, w: 5.4, h: 0.45, fontSize: 12, color: HEX.muted, italic: true });
-s.addNotes("Target engineering follows the journal paper exactly. Features: the six physical variables we could rebuild from the public data. Wave velocity is computed from the frequency spectrum of the current meter signal and checked against linear wave theory (r about 0.95).");
 
 // ================================================================ 7. Workflow
 s = content("Workflow and code structure", "Approach");
@@ -290,7 +286,6 @@ text(s, [
 ], { x: 5.37, y: 3.55, w: 4.0, h: 0.7, fontFace: "Courier New", fontSize: 11, color: C.text1 });
 text(s, "Prints our scores next to both papers and saves a CSV.",
   { x: 5.37, y: 4.3, w: 4.0, h: 0.5, fontSize: 12, color: HEX.muted });
-s.addNotes("Walk through the pipeline left to right. Each box is a file in the repo. For the live demo we run build_features.py once (about 30 s) and then run_random_forest.py, which prints the comparison table.");
 
 // ================================================================ 8. MAIN: model choice
 pres.addSection({ title: "Model" });
@@ -299,7 +294,7 @@ card(s, 0.5, 1.25, 4.35, 3.0, "Why RF card");
 text(s, [{ text: "Why a Random Forest", options: { bold: true, fontSize: 15, color: C.accent2, breakLine: true } }],
   { x: 0.72, y: 1.38, w: 4.0, h: 0.35 });
 text(s, bullets([
-  "Same model as the internal CS229 study, so scores compare directly (32 trees, default settings)",
+  "Same model as Egan's CS229 report, so scores compare directly (32 trees, default settings)",
   "Captures thresholds: waves only break flocs above a certain strength",
   "Built for small tables: no scaling, robust to noisy sensors",
   "Explains itself: feature importance shows which physics matters",
@@ -314,12 +309,11 @@ text(s, bullets([
   "Averaging many trees smooths the noise in field data",
 ], 13), { x: 5.37, y: 1.78, w: 4.0, h: 2.4 });
 text(s, [
-  { text: "Watch-outs: ", options: { bold: true, color: C.accent6 } },
+  { text: "Limitations: ", options: { bold: true, color: C.accent6 } },
   { text: "a forest cannot predict beyond the range it was trained on, and neighbouring hours are near-copies, so a random split overstates accuracy. " },
   { text: "Also run for comparison: ", options: { bold: true, color: C.text2 } },
   { text: "LASSO (journal paper) and SVR (class paper's second model)." },
 ], { x: 0.5, y: 4.4, w: 9.0, h: 0.75, fontSize: 13 });
-s.addNotes("Main slide. We kept the Random Forest from the internal paper so our numbers are directly comparable, and because it fits small, noisy, non-linear tabular data well. We also ran LASSO, which the journal paper used, and SVR, the internal paper's other model. Be upfront about the two weaknesses: no extrapolation and autocorrelated rows.");
 
 // ================================================================ 9. Evaluation design
 s = content("How we test: three ways to hold data out", "Model");
@@ -327,7 +321,7 @@ const N = 24;
 const rows = [
   ["Random 70/30", "Test hours sit next to training hours, so it is optimistic (class paper)",
     (i) => ([2, 5, 9, 12, 16, 19, 22].includes(i) ? "test" : "train")],
-  ["Time-blocked", "Whole multi-day stretches held out with a 12 h gap. Honest forecast test (ours)",
+  ["Time-blocked", "Whole multi-day stretches held out with a 12 h gap. Closest to real forecasting (ours)",
     (i) => (i >= 10 && i <= 15 ? "test" : (i === 9 || i === 16 ? "gap" : "train"))],
   ["Leave one season out", "Train on two seasons, predict the third. New-conditions test (ours)",
     (i) => (i >= 16 ? "test" : "train")],
@@ -355,7 +349,6 @@ const ly = 4.6;
 text(s, [{ text: "Score r²: ", options: { bold: true } },
   { text: "1 = perfect, 0 = no better than guessing the average, below 0 = worse than that." }],
   { x: 5.75, y: ly - 0.05, w: 3.75, h: 0.55, fontSize: 12, color: HEX.muted });
-s.addNotes("This is the most important methodological choice. Hourly floc size changes slowly, so a random split lets the model see the hour before and after every test hour. Time-blocked splits remove whole stretches, which is how a real forecast would be used. Leave-one-season-out is the hardest test.");
 
 // ================================================================ 10. Results: accuracy
 pres.addSection({ title: "Results" });
@@ -367,12 +360,11 @@ barChart(s, { x: 0.5, y: 1.25, w: 5.9, h: 3.7, min: -0.2, max: 1.0, labelW: 2.55
           ["Our features, random split", 0.64], ["Our features, held-out time blocks", 0.34],
           ["One season, held-out blocks (best)", -0.14]] });
 text(s, [{ text: "0.34", options: { fontFace: THEME.headFontFace, fontSize: 48, bold: true, color: C.accent2, breakLine: true } },
-  { text: "honest accuracy across all seasons (95% interval 0.15 to 0.49)", options: { fontSize: 13 } }],
+  { text: "accuracy on unseen time periods, all seasons (95% interval 0.15 to 0.49)", options: { fontSize: 13 } }],
   { x: 6.6, y: 1.3, w: 2.9, h: 1.65 });
 text(s, [{ text: "Below 0", options: { fontFace: THEME.headFontFace, fontSize: 30, bold: true, color: C.accent6, breakLine: true } },
   { text: "when predicting a season the model never saw", options: { fontSize: 13 } }],
   { x: 6.6, y: 3.2, w: 2.9, h: 1.2 });
-s.addNotes("The same features score 0.64 on a random split but 0.34 when whole stretches of time are held out. Single-season models do not beat guessing the average. Our copy of the class-paper setup reaches 0.60 against its reported 0.81; the gap is mostly the missing particle-type input.");
 
 // ================================================================ 11. Results: drivers
 s = content("Results: what drives floc size", "Results");
@@ -391,7 +383,6 @@ text(s, bullets([
 ], 13), { x: 6.12, y: 1.85, w: 3.2, h: 2.85 });
 text(s, "Pooled model, all seasons. Longer bar = the model relies on it more.",
   { x: 0.5, y: 4.9, w: 5.2, h: 0.3, fontSize: 11, color: HEX.muted, italic: true });
-s.addNotes("Permutation importance: shuffle one feature at a time on held-out data and see how much accuracy drops. The two physical drivers from the journal paper come out on top. Salinity and temperature mostly act as a season label.");
 
 // ================================================================ 12. Results: time series
 s = content("Results: what the model gets right and wrong", "Results");
@@ -399,14 +390,13 @@ s.addImage({ path: path.join(FIG, "timeseries_rf_oof.png"), x: 0.4, y: 1.15, w: 
   altText: "Measured and predicted floc size over time for each season", objectName: "Time series figure" });
 text(s, "Grey: measured floc size. Colour: prediction for days the model never saw ('out-of-fold').",
   { x: 0.4, y: 4.92, w: 5.85, h: 0.35, fontSize: 11, color: HEX.muted, italic: true });
-card(s, 6.5, 1.25, 3.0, 3.6, "Takeaway card");
+card(s, 6.5, 1.25, 3.0, 3.6, "Summary card");
 text(s, [{ text: "Gets right", options: { bold: true, fontSize: 14, color: C.accent3, breakLine: true } },
   { text: "The tide-to-tide rhythm, especially late Winter and Spring.", options: { fontSize: 13, breakLine: true } },
   { text: " ", options: { fontSize: 8, breakLine: true } },
   { text: "Gets wrong", options: { bold: true, fontSize: 14, color: C.accent6, breakLine: true } },
   { text: "Multi-day shifts in the average size, such as early Winter and late Summer. These are likely driven by biology and by where the mud comes from, which we cannot measure.", options: { fontSize: 13 } }],
   { x: 6.72, y: 1.42, w: 2.6, h: 3.35 });
-s.addNotes("The model tracks the short tidal oscillations but misses slow, multi-day changes in floc size. That is exactly where biology matters, according to the journal paper.");
 
 // ================================================================ 13. Conclusions
 pres.addSection({ title: "Conclusions" });
@@ -423,9 +413,8 @@ concl.forEach((t, i) => {
   badge(s, 0.5, y, String(i + 1), "Conclusion badge " + (i + 1));
   text(s, t, { x: 1.1, y: y + 0.02, w: 8.4, h: 0.8, fontSize: 15, color: C.background1 });
 });
-text(s, "Next step: add the same team's Dryad optics data (15 cm sizer, particle-type index) for a closer replication.",
+text(s, "Next step: the same group's optics data on Dryad, which lists a 15 cm sizer and a particle-type index.",
   { x: 0.5, y: 4.85, w: 8.3, h: 0.35, fontSize: 12, color: C.background2, italic: true });
-s.addNotes("Four takeaways. Be honest that the predictive accuracy is modest, and explain that this is a finding, not a failure: it shows what physics can and cannot do, and why the published numbers look higher.");
 
 // ================================================================ 14. Comparison
 s = content("Comparison and reasons for the difference", "Conclusions");
@@ -434,7 +423,7 @@ const tc = (t, o) => ({ text: t, options: Object.assign({ fontSize: 12, color: C
 s.addTable([
   [th2(""), th2("Journal paper (2022)"), th2("Class paper (CS229)"), th2("This project")],
   [tc("Inputs", { bold: true }), tc("11: physics, biology, sediment"), tc("8: physics, biology"), tc("6: physics only")],
-  [tc("Location", { bold: true }), tc("Optics platform, sizer 15 cm"), tc("Same as journal"), tc("Platform P2, sizer 35 cm")],
+  [tc("Location", { bold: true }), tc("Optics platform, sizer 15 cm"), tc("Single optics platform"), tc("Platform P2, sizer 35 cm")],
   [tc("Model", { bold: true }), tc("LASSO + feature elimination"), tc("Random Forest, SVR"), tc("Random Forest (main), SVR, LASSO")],
   [tc("How scored", { bold: true }), tc("Fit on its own data"), tc("Random 70/30 split"), tc("Held-out time blocks, plus both of theirs")],
   [tc("Reported r²", { bold: true }), tc("0.15 to 0.65"), tc("0.81 (RF), 0.76 (SVR)"), tc("0.34 held-out; 0.60 / 0.53 class setup; 0.17 to 0.43 fit")],
@@ -451,7 +440,6 @@ reasons.forEach(([h, b], i) => {
   text(s, [{ text: h, options: { bold: true, fontSize: 13, color: C.text2, breakLine: true } },
            { text: b, options: { fontSize: 12 } }], { x: x + 0.55, y: 4.1, w: 2.4, h: 1.05 });
 });
-s.addNotes("Side by side. Measured the way each paper measured it, our scores land close: 0.17 to 0.43 against the journal's 0.15 to 0.65, and 0.60 against the class paper's 0.81. The three reasons for the remaining gap are missing biology inputs, the scoring method, and the measurement location.");
 
 // ---------------------------------------------------------------- write
 (async () => {

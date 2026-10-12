@@ -1,7 +1,7 @@
 """Loaders for the NSF OCE-1736668 South SF Bay dataset (NonVectrinoData subset).
 
 All times are converted from MATLAB datenum to pandas Timestamps (naive; the
-README does not state a time zone, so none is assumed).
+dataset documentation does not state a time zone, so none is applied).
 """
 from pathlib import Path
 import re

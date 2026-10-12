@@ -1,4 +1,4 @@
-"""Task 5: LASSO+RFECV, RF, SVR with time-blocked evaluation, baselines,
+"""LASSO+RFECV, RF and SVR with time-blocked evaluation, baselines,
 ablations, leave-one-season-out, noise robustness, final pooled models."""
 import json
 import sys

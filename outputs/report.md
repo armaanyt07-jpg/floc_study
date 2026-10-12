@@ -1,4 +1,4 @@
-# Predicting floc size from physics-only features — results
+# Predicting floc size from physics-only features: results
 
 Data: NSF OCE-1736668 South San Francisco Bay, platform P2. Target = burst-averaged
 volume-weighted mean floc diameter `d_mean` from the LISST at **35 cmab** (the paper used 15 cmab
@@ -8,14 +8,14 @@ on the optics platform ~30 m away, so this is *not* an exact replication). Featu
 
 "EGAN22" = Egan et al. (2022) JGR Oceans. "Class paper" = Egan, CS229 report.
 
-## 1. Bottom line
+## 1. Summary
 
 | Question | Answer |
 |---|---|
-| Do physics-only features reach the journal paper's r² (0.15–0.65)? | **Only in-sample** (LASSO in-sample r² 0.17–0.29 per season, 0.43 pooled; `diag_protocols.csv`), which is how EGAN22 Table 1 reports r². Under honest time-blocked testing, single-season models score **r² ≤ 0** except two regime subsets (Winter-advection RF 0.32 / SVR 0.39; Spring-resuspension LASSO 0.61, n=43). |
-| Do they reach the class paper's r² (0.75–0.81)? | **No.** A random 70/30 split (the class-paper protocol) gives 0.33–0.47 per season and 0.64 pooled with *our* features — that gap is mostly the random split leaking autocorrelated hourly neighbours, not skill. |
-| Best honest result | Pooled across seasons, time-blocked CV: **RF r² = 0.34 [95% CI 0.15, 0.49]**, SVR 0.31, LASSO 0.27 (RMSE ≈ 20 µm vs 25 µm for the mean). |
-| Will it work for a standalone entry 5 years from now? | **Not reliably.** Most of the pooled skill is the *seasonal level* of d, which the model reads off T and S (T,S alone: r² 0.29). Leave-one-season-out — the closest proxy for "new conditions" — fails badly (r² −0.1 to −4.6; biases of 25–40 µm). Within-season, the physics only tracks the tidal/wave-scale wiggles, not multi-day level shifts. |
+| Do physics-only features reach the journal paper's r² (0.15–0.65)? | **Only in-sample** (LASSO in-sample r² 0.17–0.29 per season, 0.43 pooled; `diag_protocols.csv`), which is how EGAN22 Table 1 reports r². Under time-blocked testing, single-season models score **r² ≤ 0** except two regime subsets (Winter-advection RF 0.32 / SVR 0.39; Spring-resuspension LASSO 0.61, n=43). |
+| Do they reach the class paper's r² (0.75–0.81)? | **No.** A random 70/30 split (the class-paper protocol) gives 0.33–0.47 per season and 0.64 pooled with these features. Most of that comes from the random split, which puts neighbouring (strongly autocorrelated) hours in the training set. |
+| Best result on unseen time periods | Pooled across seasons, time-blocked CV: **RF r² = 0.34 [95% CI 0.15, 0.49]**, SVR 0.31, LASSO 0.27 (RMSE ≈ 20 µm vs 25 µm for the mean). |
+| Will it generalise to future conditions? | **Not reliably.** Most of the pooled skill is the *seasonal level* of d, which the model reads off T and S (T,S alone: r² 0.29). Leave-one-season-out, the closest test of new conditions, fails (r² −0.1 to −4.6; biases of 25–40 µm). Within-season, the physics only tracks tide- and wave-scale changes, not multi-day level shifts. |
 | Most reliable predictors | `u_bar_4` (4-h lagged current, +) and `u_b` (wave orbital velocity, −), consistent with EGAN22. ε and salinity are weak within a season. |
 
 ## 2. Model accuracy (time-blocked CV, out-of-fold)
@@ -38,8 +38,8 @@ From `tables/r2_by_season_regime.csv`.
 | Spring | A | 111 | −0.30 | −0.15 | −0.50 | −0.21 | 0.62 |
 | **Pooled** | all | 1120 | 0.27 [0.14, 0.38] | **0.34** [0.15, 0.49] | 0.31 [0.16, 0.43] | −0.09 | 0.81 |
 
-\* Persistence uses the measured floc size one hour earlier. It is a reference only — a standalone
-entry would not have it — but it shows d is strongly autocorrelated.
+\* Persistence uses the measured floc size one hour earlier. It is a reference only, because a
+prediction made from a single burst would not have it, but it shows that d is strongly autocorrelated.
 
 Negative r² means worse than predicting the test block's own mean. With contiguous blocks this
 happens easily: the mean floc size shifts by 20–40 µm between weeks (see `figures/timeseries_rf_oof.png`),
@@ -70,12 +70,14 @@ in-sample r² when the feature is removed; features with −Δr² < 0.02 elimina
 | Winter A | 212 | 0.30 | ū₄ (+) 0.17, S (+) 0.05 | c̄ (−), ū₄ (+), u_b (−), a450/a676; r² 0.50 |
 | Spring R | 43 | 0.79 | u_b (−) 0.32, ū₄ (+) 0.10, ū (−) 0.04 | T (+), Chl-a (+), u_b (−); r² 0.46 |
 | Spring A | 111 | 0.18 | ū₄ (+) 0.09, S (+) 0.07 | T, Chl-a, a450/a676, c̄; r² 0.15 |
-| Summer all | 427 | 0.24 | S (+), T (+), u_b (−) ≈0.13 each | — |
-| Winter all | 406 | 0.11 | ū₄ (+) 0.11 | — |
-| Pooled | 1120 | 0.41 | T (+) 0.22, S (−) 0.19, u_b (−) 0.04 | — |
+| Summer all | 427 | 0.24 | S (+), T (+), u_b (−) ≈0.13 each | n/a |
+| Winter all | 406 | 0.11 | ū₄ (+) 0.11 | n/a |
+| Pooled | 1120 | 0.41 | T (+) 0.22, S (−) 0.19, u_b (−) 0.04 | n/a |
 
 "none" = the blocked-CV LASSO chose a penalty large enough to zero every coefficient, i.e. no
-feature generalised across time blocks in that subset.
+feature generalised across time blocks in that subset. The pooled in-sample r² here (0.41) uses
+that blocked-CV penalty; §1 and §5 quote 0.43, from a penalty chosen by shuffled CV, the setup the
+journal paper most likely used.
 
 **RF permutation importance** (drop in out-of-fold r² when a feature is shuffled;
 `tables/rf_permutation_importance.csv`, `figures/rf_importance.png`):
@@ -107,7 +109,7 @@ EGAN22's positive sign. This could be the 35 vs 15 cmab height or the different 
 | + ampmean (uncalibrated backscatter) | −0.14 | 0.01 | 0.11 | 0.39 | 0.06 |
 
 † The regime label uses the next 12 h of LISST beam attenuation, so it isn't available for a
-standalone entry. It gave no meaningful gain anyway.
+prediction made from a single burst. It gave no meaningful gain.
 
 Removing `u_bar_4` hurts in Summer and Winter, matching EGAN22. Removing S hurts the pooled and
 Spring models but *helps* Summer and Winter, which is the season-label effect again.
@@ -132,7 +134,7 @@ Spring models but *helps* Summer and Winter, which is the season-label effect ag
    their 0.15–0.65 range, which is reasonable given we lack Chl-a, absorption ratios and mean SSC.
 3. **T and S act as clocks.** Within Winter, T and S alone score −0.61 time-blocked but +0.18 on a
    random split: they drift slowly, so a forest uses them to find the "same week" in training.
-   The hydrodynamic trio (u_b, ū, ū₄) alone is the best honest Winter model (RF 0.13).
+   The hydrodynamic trio (u_b, ū, ū₄) alone is the best time-blocked Winter model (RF 0.13).
 4. **Different measurement.** 35 cmab at P2 vs 15 cmab on the optics platform; 1-min LISST
    averaged over the ADV burst vs hourly samples.
 
@@ -164,12 +166,11 @@ Same picture as the mean diameter.
   EGAN22 gives no tau threshold. Bursts with mean tau < 0.3 and bursts within 3 days before a cleaning
   are flagged, not dropped. Removing them did not improve skill (`diag_protocols.csv`).
 - **Scintillation (EGAN22 §2.2):** a bin among the 5 smallest/largest that is ≥40% above *both*
-  neighbours (outermost bin: an abrupt kink) is removed. **An earlier version (v1) also removed
-  everything beyond the spike.** That clipped real coarse flocs in 39% of Summer and 65% of Spring
-  minutes and gave per-minute medians (60 / 61 / 48 µm) far below EGAN22 Fig. 1, so it was replaced. The current
-  medians (83 / 62 / 106 µm) match Fig. 1. v1 outputs are kept in `outputs/archive_v1_tailclip/`;
-  with the v1 target, *no* model had skill (pooled RF −0.04). **The result depends strongly on this
-  target-cleaning choice.**
+  neighbours (outermost bin: an abrupt kink) is removed. Removing the whole tail beyond a spike
+  instead clips real coarse flocs (in 39% of Summer and 65% of Spring minutes), gives per-minute
+  medians (60 / 61 / 48 µm) far below EGAN22 Fig. 1, and leaves no model with skill (pooled RF r²
+  −0.04). The isolated-spike rule gives medians of 83 / 62 / 106 µm, which match Fig. 1. **The results
+  depend strongly on this target-cleaning choice.**
 - **Target:** volume-weighted arithmetic mean of the burst-averaged PSD (≥7 good minutes per 14-min burst).
 - **u_b:** √(2·Σ wave-band (S_uu+S_vv)·df), wave band = [0.5, 2]·f_peak of the ADV pressure spectrum.
   It agrees with linear wave theory from the same pressure sensor (r = 0.95–0.97). EGAN22 defers this
@@ -184,7 +185,7 @@ Same picture as the mean diameter.
   versa for advection. Used only to split the data. Our split is advection-heavy (Summer 68% vs 45%
   in EGAN22).
 - **ADV QC:** bursts with >10% NaN (correlation < 30) dropped. Rows kept per step are in `tables/qc_counts.csv`.
-- **README mismatches found:** ADV `press` is not in dbar (≈0.061 m per unit against CTD depth);
+- **Differences from the dataset documentation:** ADV `press` is not in dbar (≈0.061 m per unit against CTD depth);
   Spring P2 CTD has no depth; low-correlation ADV samples are NaN rather than interpolated; LISST
   has an undocumented `zsc` variable. The second dataset in EGAN22's data statement
   (purl sh883gp0753) contains benthic images, and the main archive has no optics/biology files.
@@ -196,7 +197,7 @@ Same picture as the mean diameter.
 
 1. **Biology and sediment features** (Chl-a, absorption ratios, calibrated SSC), the variables
    EGAN22 needed in spring, are what move the multi-day level of d. They are not in this archive.
-2. **More seasons and years.** With three ~3-week deployments, the model sees three seasonal levels;
+2. **More seasons and years.** With three deployments of about three weeks of usable data each, the model sees three seasonal levels;
    it cannot learn what sets the level. Each extra deployment is worth more than any algorithm change.
 3. **Recalibrating the level online.** If even an occasional floc size measurement is available,
    use the physics model for hour-to-hour changes and re-estimate the level periodically.

@@ -20,13 +20,13 @@ from . import load
 
 FS = 8.0                  # ADV sampling rate (Hz)
 BURST = pd.Timedelta(minutes=14)
-TAU_MIN = 0.10            # LISST optical transmission threshold (user decision)
+TAU_MIN = 0.10            # LISST transmission below this means saturated optics: drop
 TAU_FLAG = 0.30           # flag (not drop) 0.10 <= tau < 0.30
 ADV_MAX_NAN = 0.10        # drop bursts with >10% NaN (corr<30) samples
 MIN_LISST_PER_BURST = 7   # of ~14 one-minute LISST samples in the burst window
 CLEANING = pd.to_datetime(["2018-07-25", "2018-08-01", "2019-01-24",
                            "2019-04-29", "2019-05-07"])
-FOUL_DAYS = 3.0           # flag bursts within 3 days before a cleaning (assumption)
+FOUL_DAYS = 3.0           # flag bursts within 3 days before an instrument cleaning
 G = 9.81
 
 
@@ -40,12 +40,8 @@ def remove_scintillation(psd, frac=0.40, nedge=5):
     5 largest bins that is >=40% larger than BOTH neighbours. The outermost
     bin (one neighbour) is a spike if it is >=40% larger than its neighbour
     while that neighbour is NOT itself rising by >=40% (an abrupt kink, not
-    a smoothly rising tail). Only the spiking bin is removed.
-
-    (v1 removed the spiking bin and the whole tail beyond it; that clipped
-    real coarse flocs in 39%/65% of Summer/Spring minutes and gave medians
-    far below EGAN22 Fig. 1, so it was replaced. v1 outputs are archived in
-    outputs/archive_v1_tailclip/.)
+    a smoothly rising tail). Only the spiking bin is removed, so real
+    coarse flocs in a rising tail are kept.
     Returns cleaned copy and per-row count of removed bins.
     """
     p0 = psd
@@ -162,10 +158,10 @@ def eps_inertial(f, Sww, uh, band=(1.5, 3.5)):
     """TKE dissipation from the inertial subrange of S_ww (per Hz).
 
     Frozen turbulence: S_ww(f) = (24/55) a_K eps^(2/3) (U/2pi)^(2/3) f^(-5/3),
-    a_K = 1.5. Following the spirit of Feddersen et al. (2007), the advection
-    speed is not the mean current but the full instantaneous (mean + wave)
-    horizontal velocity, entering as <|u_h|^(2/3)>. This is a simplification
-    of Feddersen's 3-D integral (assumption, stated in the report).
+    a_K = 1.5. As in Feddersen et al. (2007), the advection speed is the full
+    instantaneous (mean + wave) horizontal velocity rather than the mean
+    current. It enters as <|u_h|^(2/3)>, a simpler form of Feddersen's 3-D
+    integral.
     Returns eps (W/kg) and the fitted log-log slope (quality indicator).
     """
     m = (f >= band[0]) & (f <= band[1]) & (Sww > 0)

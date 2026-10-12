@@ -1,4 +1,4 @@
-"""Task 1: inspect one file of each type, time ranges, NaN fractions, overlap."""
+"""Inspect one file of each type: keys, shapes, time ranges, NaN fractions and overlap."""
 import sys
 from pathlib import Path
 
@@ -88,12 +88,6 @@ for s in load.SEASONS:
           f"max={df.frac_corr_lt30.max():.3%}  bursts>10%: {int((df.frac_corr_lt30 > .1).sum())}")
     print(f"    theta (deg): unique={np.unique(df.theta.round(2))[:5]}")
     ranges[(s, "ADV P2")] = (df.t.min(), df.t.max() + pd.Timedelta(minutes=14))
-
-section("Stray folder check")
-extra = load.DATA / "ADV" / "Spring" / "P1"
-if extra.exists():
-    print(f"  {extra.relative_to(load.ROOT)} exists with {len(list(extra.glob('*.mat')))} files "
-          "(not requested in the brief; ignored)")
 
 section("Time-range overlap per season")
 for s in load.SEASONS:
