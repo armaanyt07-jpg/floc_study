@@ -3,8 +3,9 @@ Pull only the files needed for the hydrodynamic/physical-feature model out of
 the 2 GB SDR zip, without downloading the whole archive.
 
 Needs:  pip install remotezip
-Usage:  python download_data.py <URL-of-NonVectrinoData-zip> [out_dir]
+Usage:  python download_data.py <URL-of-NonVectrinoData-zip> [out_dir] [--lisst-only]
         (copy the URL from the Download link on purl.stanford.edu/wv787xr0534)
+        --lisst-only fetches just the LISST files (enough for build_psd.py)
 
 If the server doesn't support HTTP range requests, RemoteZip will error out;
 in that case download the zip normally and run with a local path instead
@@ -13,8 +14,10 @@ in that case download the zip normally and run with a local path instead
 import os, re, sys
 from remotezip import RemoteZip
 
-url = sys.argv[1]
-out = sys.argv[2] if len(sys.argv) > 2 else "data"
+lisst_only = "--lisst-only" in sys.argv
+args = [a for a in sys.argv[1:] if a != "--lisst-only"]
+url = args[0]
+out = args[1] if len(args) > 1 else "data"
 
 def wanted(name):
     if name.startswith("__MACOSX") or name.endswith("/"):
@@ -22,6 +25,8 @@ def wanted(name):
     # target: LISST (only exists at P2)
     if "/LISST/" in name:
         return True
+    if lisst_only:
+        return False
     # salinity/temperature: all CTDs are tiny; P2's salinity is unusable,
     # so P1/P3 are the likely salinity sources
     if "/CTD/" in name:
