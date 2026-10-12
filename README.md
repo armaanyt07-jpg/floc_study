@@ -77,17 +77,31 @@ Options: `--trees 32` (class-paper tree count), `--target d50` or `--target sigm
    ven/bin/python scripts/make_figures.py                   # figures in outputs/figures/
    ```
 
+4. **Predict the full size distribution** (all 32 LISST bins instead of one size number).
+   Needs the LISST files in `Data/` (`download_data.py ... --lisst-only` fetches just those):
+
+   ```bash
+   ven/bin/python build_psd.py               # caches the burst-averaged curves in outputs/cache/
+   ven/bin/python run_psd_prediction.py      # scores, outputs/tables/psd_scores.csv and two figures
+   ven/bin/python -m pytest tests            # unit tests
+   ```
+
 ## Project layout
 
 ```
 build_features.py          raw .mat files -> outputs/cache/features.parquet
 run_random_forest.py       main demo: Random Forest vs both papers
+build_psd.py               LISST curves (32 bins) per burst -> outputs/cache/psd_bins.parquet
+run_psd_prediction.py      predicts the whole size distribution and scores it as a curve
 download_data.py           fetches only the needed files from the archive
 src/
   load.py                  .mat loading, MATLAB time conversion
   features.py              LISST target, wave/current/turbulence features, QC, regimes
   models.py                time-blocked splits, LASSO + RFECV, RF, SVR, scoring
   predict.py               predict one burst with saved models, with training-range checks
+  psd.py                   size-distribution curves, models and curve scores
+tests/
+  test_psd.py              tests for src/psd.py
 scripts/
   inspect_raw_data.py      file contents, time ranges, overlap checks
   run_all_models.py        every model, season and regime, ablations, robustness
