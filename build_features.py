@@ -1,12 +1,19 @@
-"""Tasks 2-4: build the one-row-per-burst feature table and cache it."""
+"""Build the one-row-per-burst feature table from the raw files and cache it."""
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from src import features, load  # noqa: E402
+
+missing = [p for s in load.SEASONS
+           for p in (load.lisst_path(s), load.ctd_path(s, "P1"), load.ctd_path(s, "P2"))
+           if not p.exists()]
+missing += [f"ADV 15 cmab bursts for {s}" for s in load.SEASONS if not load.adv_files(s)]
+if missing:
+    sys.exit(f"Raw data not found ({len(missing)} missing, e.g. {missing[0]}).\n"
+             "Download it first:  python download_data.py")
 
 OUT = load.ROOT / "outputs"
 (OUT / "cache").mkdir(parents=True, exist_ok=True)

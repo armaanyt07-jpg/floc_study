@@ -57,7 +57,7 @@ def table(rows, widths, head=True):
 
 story = [
     p("Predicting Floc Size in South San Francisco Bay from Waves and Currents", H_TITLE),
-    p("ML Mini Project write-up. A physics-only replication of Egan et al. (2022, JGR Oceans) and "
+    p("ML Mini Project, Team 7. A physics-only replication of Egan et al. (2022, JGR Oceans) and "
       "Egan's CS229 report, built on the public Stanford Digital Repository dataset.", SUB),
 
     p("1. Problem statement", H),
@@ -82,7 +82,7 @@ story = [
     Spacer(1, 3),
     p("After quality control: <b>1,120 hourly samples</b> (Summer 427, Winter 406, Spring 287) from 1,666 "
       "bursts. Not available in this archive: the chlorophyll and light-absorption (biology) sensors both "
-      "papers used. Data issues we found and documented: the ADV pressure is not in the units the README "
+      "papers used. Data issues we found and documented: the ADV pressure is not in the units the dataset documentation "
       "states, P2 salinity is unusable (P1 used instead), and low-quality ADV samples are NaN rather than "
       "interpolated."),
 
@@ -94,7 +94,7 @@ story = [
         "<b>Features (6).</b> Wave orbital velocity u_b (from the velocity spectrum, cross-checked against "
         "linear wave theory, r = 0.95), tidal current now and 4 hours earlier, turbulence dissipation, "
         "temperature, salinity. Gaps are never filled; bad bursts are dropped.",
-        "<b>Model.</b> A <b>Random Forest</b>, the model of the internal CS229 study, so results compare directly. "
+        "<b>Model.</b> A <b>Random Forest</b>, the model used in Egan's CS229 report, so results compare directly. "
         "It suits small, noisy, non-linear tabular data with mixed units, needs no scaling and reports feature "
         "importance. LASSO with recursive feature elimination (journal paper) and SVR (CS229) are run for comparison.",
         "<b>Evaluation.</b> Hourly floc size is strongly autocorrelated, so a random split lets the model see the "
@@ -126,8 +126,8 @@ story_p2 = [
         ["Setup", "r² (ours)", "Reference"],
         ["Class-paper setup: all seasons, random 70/30, RF 32 trees, d50", "0.60", "CS229 reported 0.81"],
         ["Class-paper SVR (C = 2048, epsilon = 4), d50", "0.53", "CS229 reported 0.76"],
-        ["Our 6 features, all seasons, random split", "0.64", "optimistic protocol"],
-        ["Our 6 features, all seasons, held-out time blocks", "<b>0.34</b> (95% CI 0.15 to 0.49)", "honest estimate"],
+        ["Our 6 features, all seasons, random split", "0.64", "neighbouring hours leak into training"],
+        ["Our 6 features, all seasons, held-out time blocks", "<b>0.34</b> (95% CI 0.15 to 0.49)", "accuracy on unseen time periods"],
         ["One season at a time, held-out time blocks", "below 0 (best -0.14)", "no skill within a season"],
         ["Predict an unseen season (leave-one-season-out)", "-0.1 to -4.6", "fails on new conditions"],
         ["LASSO fitted on its own data (journal protocol)", "0.17 to 0.29 per season, 0.43 pooled", "journal 0.15 to 0.65"],
@@ -137,7 +137,7 @@ story_p2 = [
       "(positive effect) and wave velocity second (negative effect), matching the journal paper. Turbulence adds "
       "almost nothing and salinity is weak within a season, contrary to the CS229 report, which ranked salinity "
       "first. The model follows the tide-to-tide rhythm of floc size but misses multi-day shifts in the average."),
-    Image(str(ROOT / "outputs" / "figures" / "rf_importance.png"), width=178 * mm, height=178 * mm * 450 / 1650),
+    Image(str(ROOT / "outputs" / "figures" / "rf_importance.png"), width=150 * mm, height=150 * mm * 450 / 1650),
     p("Figure: Random Forest permutation importance per season (drop in held-out r\u00b2 when a feature is "
       "shuffled; + / - shows the direction of its effect on floc size).", SUB),
 
@@ -153,7 +153,8 @@ story_p2 = [
         "location (35 cm at P2 vs 15 cm on the optics platform).",
         "For a model that lasts years, new data matters more than a new algorithm: biology and sediment sensors, "
         "more deployments, and occasional direct size measurements to re-anchor predictions. A next step is the "
-        "same team's Dryad optics dataset, which adds the particle-type index at the same site.",
+        "same research group's optics dataset on Dryad (doi:10.5061/dryad.8sf7m0cpn), whose description lists a "
+        "particle-type index measured at the same site.",
     ]),
 ]
 
@@ -168,6 +169,6 @@ def footer(canvas, doc):
 
 doc = SimpleDocTemplate(str(OUT), pagesize=A4, leftMargin=16 * mm, rightMargin=16 * mm,
                         topMargin=14 * mm, bottomMargin=16 * mm,
-                        title="Predicting floc size in South San Francisco Bay", author="ML Mini Project")
+                        title="Predicting floc size in South San Francisco Bay", author="ML Mini Project, Team 7")
 doc.build(story + story_p2, onFirstPage=footer, onLaterPages=footer)
 print("wrote", OUT)

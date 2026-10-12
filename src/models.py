@@ -8,7 +8,6 @@ block (autocorrelation, and u_bar_4 which looks 4 h back) are removed.
 """
 import numpy as np
 import pandas as pd
-from sklearn.base import clone
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_selection import RFECV
 from sklearn.linear_model import Lasso, LassoCV
@@ -26,7 +25,7 @@ CACHE = load.ROOT / "outputs" / "cache" / "features.parquet"
 # biology/optics features and mean SSC that are not in this dataset.
 BASELINE = ["u_b", "u_bar", "u_bar_4", "epsilon", "T", "S"]
 TARGET = "d_mean"
-LOG_COLS = ("epsilon",)   # log10 for the linear/kernel models (user decision)
+LOG_COLS = ("epsilon",)   # log10 for the linear and kernel models (epsilon is very skewed)
 PURGE = pd.Timedelta(hours=12)
 
 
@@ -65,12 +64,6 @@ def blocked_splits(times, n_splits=5, purge=PURGE):
         train = np.where((t < lo) | (t > hi))[0]
         out.append((train, test))
     return out
-
-
-def blocked_cv(n_splits=5):
-    """Kept for compatibility: plain contiguous KFold (no purge)."""
-    from sklearn.model_selection import KFold
-    return KFold(n_splits=n_splits, shuffle=False)
 
 
 # --------------------------------------------------------------------------
@@ -184,7 +177,7 @@ def scores(y, p, groups, n_boot=1000, seed=0):
 
 
 def persistence(frame):
-    """Previous burst's d (1 h earlier) as prediction: a with-history
-    reference only; a standalone future entry would not have it."""
+    """Previous burst's d (1 h earlier) as the prediction. A reference only:
+    a prediction made from a single burst would not have it."""
     s = frame.set_index("hour")[TARGET]
     return frame["hour"].sub(pd.Timedelta(hours=1)).map(s).to_numpy(float)

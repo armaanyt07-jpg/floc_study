@@ -1,5 +1,7 @@
 # Predicting Floc Size in South San Francisco Bay
 
+ML Mini Project, Team 7
+
 Can the size of suspended mud particles ("flocs") be predicted from wave and current
 measurements alone? This project builds a Random Forest on public field data from South
 San Francisco Bay and compares it with two earlier studies by the same research group:
@@ -14,13 +16,13 @@ Floc size controls how fast mud settles (settling speed grows with diameter squa
 decides where sediment and the pollutants attached to it end up. It is rarely measured and
 varies about threefold within a season.
 
-## Results at a glance
+## Results
 
 | Setup | r² (ours) | Reference |
 |---|---|---|
 | Class-paper setup (all seasons, random 70/30 split, RF, d50) | 0.60 | Class paper: 0.81 |
 | Class-paper SVR (C = 2048, epsilon = 4), d50 | 0.53 | Class paper: 0.76 |
-| Our 6 features, all seasons, held-out time blocks | **0.34** (95% CI 0.15 to 0.49) | Honest estimate |
+| Our 6 features, all seasons, held-out time blocks | **0.34** (95% CI 0.15 to 0.49) | Accuracy on unseen time periods |
 | One season at a time, held-out time blocks | below 0 | No skill within a season |
 | Predicting an unseen season | -0.1 to -4.6 | Fails on new conditions |
 | LASSO fitted on its own data (journal protocol) | 0.17 to 0.43 | Journal paper: 0.15 to 0.65 |
@@ -53,14 +55,15 @@ Options: `--trees 32` (class-paper tree count), `--target d50` or `--target sigm
 
 ## Full pipeline from raw data
 
-1. **Download the data** (about 800 MB of the 2.5 GB archive, fetched with HTTP range requests):
+1. **Download the data** (about 800 MB of the 2.5 GB archive, fetched with HTTP range requests
+   into `Data/`):
 
    ```bash
-   ven/bin/python download_data.py https://stacks.stanford.edu/file/druid:wv787xr0534/NonVectrinoData.zip Data
+   ven/bin/python download_data.py
    ```
 
-   Source: Stanford Digital Repository, https://purl.stanford.edu/wv787xr0534
-   (NSF OCE-1736668, CC BY-NC-SA 3.0).
+   If the server refuses range requests, download `NonVectrinoData.zip` from
+   https://purl.stanford.edu/wv787xr0534 and run `ven/bin/python download_data.py path/to/NonVectrinoData.zip`.
 
 2. **Build the feature table** (about 30 s):
 
@@ -78,7 +81,7 @@ Options: `--trees 32` (class-paper tree count), `--target d50` or `--target sigm
    ```
 
 4. **Predict the full size distribution** (all 32 LISST bins instead of one size number).
-   Needs the LISST files in `Data/` (`download_data.py ... --lisst-only` fetches just those):
+   Needs the LISST files in `Data/` (`ven/bin/python download_data.py --lisst-only` fetches just those):
 
    ```bash
    ven/bin/python build_psd.py               # caches the burst-averaged curves in outputs/cache/
@@ -139,5 +142,17 @@ ven/bin/python deliverables/source/build_writeup.py
 npm install pptxgenjs && node deliverables/source/build_slides.js
 ```
 
-The committed `.pptx` is the reference version. A plain rebuild uses Office's default theme
-colours, because the colour theme was applied with an external helper script.
+The committed `.pptx` is the final version. A rebuild produces the same slides with Office's
+default colour theme.
+
+## Data and licence
+
+Field data: Egan, G., Cowherd, M., Scheu, K., Spada, F., Manning, A., Jones, C., Chang, G.,
+Fringer, O., & Monismith, S. (2019). *South San Francisco Bay boundary layer and sediment dynamics
+field data.* Stanford Digital Repository. https://purl.stanford.edu/wv787xr0534.
+Collected under NSF award OCE-1736668.
+
+The data are licensed under
+[CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/). The derived feature table
+`outputs/cache/features.parquet` and the result tables in `outputs/` are shared under the same
+licence.

@@ -1,4 +1,4 @@
-"""Task 6 figures: OOF scatter per season/model, RF importance, OOF time series."""
+"""Figures: out-of-fold scatter per season and model, RF importance, out-of-fold time series."""
 import sys
 from pathlib import Path
 
@@ -16,7 +16,7 @@ OUT = load.ROOT / "outputs"
 FIG = OUT / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 
-# reference palette (dataviz skill), first three slots validate all-pairs
+# colour-blind-safe palette: the three season colours stay distinct for common colour-vision deficiencies
 SEASON_COL = {"Summer": "#2a78d6", "Winter": "#eb6834", "Spring": "#1baf7a"}
 INK, INK2, GRID, SURF = "#0b0b0b", "#52514e", "#e4e3df", "#fcfcfb"
 plt.rcParams.update({"figure.facecolor": SURF, "axes.facecolor": SURF,

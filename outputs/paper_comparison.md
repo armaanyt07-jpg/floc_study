@@ -1,219 +1,188 @@
-# Published paper vs our project — side by side
+# Comparison with the published paper
 
-**Paper:** Egan et al. (2022), "On the Variability of Floc Characteristics in a Shallow Estuary",
-JGR Oceans. Called "the paper" below.
-**Class paper:** Egan's CS229 report (Random Forest + SVR). Included where it matters.
-**Ours:** this project (`outputs/report.md` has the full detail).
+**Journal paper:** Egan et al. (2022), "On the Variability of Floc Characteristics in a Shallow
+Estuary", JGR Oceans. Called "the paper" below.
+**Class paper:** Egan's CS229 report (Random Forest and SVR), included where relevant.
+**This project:** full details in `outputs/report.md`.
 
----
+## 0. Summary
 
-## 0. The 30-second version
-
-| | The paper | Us |
+| | The paper | This project |
 |---|---|---|
-| Goal | Understand *what drives* floc size (an explanation study) | *Predict* floc size from physics only (a forecasting study) |
-| Inputs | Physics + biology + sediment concentration (11 candidates) | Physics only (6 features) |
-| How r² was measured | On the same data the model was fitted to ("in-sample") | On time periods the model never saw ("out-of-sample") |
-| Headline r² | 0.15–0.65 | In-sample 0.17–0.43 (comparable to the paper); out-of-sample 0.34 pooled, ≤ 0 within a single season |
-| Main drivers found | Waves break flocs (−), lagged tide brings bigger flocs (+), biology in spring | **Same physical drivers**; biology can't be tested (no data) |
-| Verdict | Explains part of the variability | Agrees with the paper's physics, but physics alone is **not enough to forecast** floc size reliably |
+| Goal | Explain what drives floc size | Predict floc size from physical measurements only |
+| Inputs | Physics, biology and sediment concentration (11 candidates) | Physics only (6 features) |
+| How r² is measured | On the data the model was fitted to (in-sample) | On time periods the model has not seen (out-of-sample), plus in-sample for comparison |
+| Reported r² | 0.15 to 0.65 | In-sample 0.17 to 0.43; out-of-sample 0.34 pooled, 0 or below within a single season |
+| Main drivers | Waves reduce floc size, the tide 4 h earlier increases it, biology matters in spring | The same physical drivers; biology cannot be tested (no data) |
+| Conclusion | Explains part of the variability | Agrees with the paper's physics; physics alone does not forecast floc size reliably |
 
-**In one sentence:** we reproduce the paper's physics findings, but its r² numbers answer
-"how well does the model fit this data?", while ours answer "how well does it predict new
-data?". The second question is much harder, and the answer is "only weakly".
+The paper's r² measures how well a model fits the data it was built on. This project also
+measures how well a model predicts new data, which is harder and gives lower numbers.
 
----
-
-## 1. Plain-language glossary
+## 1. Glossary
 
 | Term | Meaning |
 |---|---|
-| **Floc / floc size (d)** | Mud particles stick together into fluffy clumps ("flocs"). Their size (µm) controls how fast mud settles. This is what we predict. |
+| **Floc, floc size (d)** | Fine mud particles stick together into loose clumps (flocs). Their size (µm) controls how fast mud settles. This is the quantity predicted. |
 | **LISST** | Laser instrument that measures the particle size distribution every minute. |
-| **ADV** | Acoustic current meter, 8 samples/s, 15 cm above the bed. Gives the wave and current features. |
+| **ADV** | Acoustic current meter, 8 samples per second, 15 cm above the bed. Source of the wave and current features. |
 | **CTD** | Temperature and salinity sensor. |
-| **u_b** | Wave orbital velocity: how hard waves shake the water near the bed. Strong waves can break flocs. |
+| **u_b** | Wave orbital velocity: how strongly waves move the water near the bed. Strong waves can break flocs. |
 | **ū (u_bar)** | Mean tidal current (+ = flood tide, water coming in). |
-| **ū₄ (u_bar_4)** | The tidal current 4 hours earlier. The paper found sediment arriving now was set in motion about 4 h ago upstream. |
-| **ε (epsilon)** | Turbulence dissipation: how much small-scale stirring there is. |
+| **ū₄ (u_bar_4)** | The tidal current 4 hours earlier. The paper found that sediment arriving now was set in motion about 4 h earlier upstream. |
+| **ε (epsilon)** | Turbulence dissipation: the amount of small-scale mixing. |
 | **T, S** | Water temperature and salinity. |
-| **Chl-a, absorption ratios** | Biology measures (algae, organic matter). The paper had them; we don't. |
-| **c̄ (SSC)** | Suspended sediment concentration (how muddy the water is). The paper had a calibrated version; we don't. |
-| **Regime R / A / M** | Resuspension (mud stirred up locally by waves) / Advection (mud carried in by the tide) / Mixed. |
-| **r²** | Share of the ups and downs in floc size the model explains. 1 = perfect, 0 = no better than always guessing the average, **negative = worse than guessing the average**. |
-| **In-sample vs out-of-sample** | In-sample = scored on the data used to build the model (easy, optimistic). Out-of-sample = scored on data held back (honest, harder). |
-| **Random split vs time-blocked split** | Random split: test hours are scattered among training hours, so the model has seen the hour before and after each test hour (it "peeks"). Time-blocked: whole multi-day stretches are held out, closer to real forecasting. |
-| **LASSO + RFECV** | A linear model that automatically switches off unhelpful features, followed by a step that removes features one at a time and keeps the best set. The paper's method. |
-| **Random Forest (RF), SVR** | Two flexible non-linear models (the class paper's methods). |
-
----
+| **Chl-a, absorption ratios** | Biology measurements (algae, organic matter). Used by the paper; not available here. |
+| **c̄ (SSC)** | Suspended sediment concentration. The paper used a calibrated version; not available here. |
+| **Regime R / A / M** | Resuspension (mud stirred up locally by waves), Advection (mud carried in by the tide), Mixed. |
+| **r²** | Share of the variation in floc size a model explains. 1 is perfect, 0 is no better than predicting the average, below 0 is worse than the average. |
+| **In-sample, out-of-sample** | In-sample: scored on the data used to build the model. Out-of-sample: scored on data held back. |
+| **Random split, time-blocked split** | Random split: test hours are scattered among training hours, so the model has seen the hours on either side of each test hour. Time-blocked: whole multi-day stretches are held out, which is closer to real forecasting. |
+| **LASSO + RFECV** | A linear model that sets unhelpful features to zero, followed by recursive removal of features to find the best set. The paper's method. |
+| **Random Forest (RF), SVR** | Two non-linear models, used in the class paper. |
 
 ## 2. Data and setup
 
-| | The paper | Us | Does it matter? |
+| | The paper | This project | Effect |
 |---|---|---|---|
-| Location | South SF Bay shoals, platforms "P1 / P1O" | Same campaigns, platform **P2** (the public dataset) | Some. A different spot means slightly different sediment supply. |
-| Seasons | Summer 2018, Winter 2019, Spring 2019 | Same | — |
-| LISST height | **15 cm** above bed | **35 cm** above bed | Some. The paper says 15 vs 45 cm looked similar, so probably minor. |
-| LISST sampling | Once per hour | Every minute, averaged over each 14-min ADV burst | Ours is less noisy per data point. |
-| Platform layout | LISST ~30 m from the current meters | Same platform | — |
-| Rows used per season (all regimes) | Summer 443, Winter 570, Spring 331 (sum of Table 1 N) | Summer 427, Winter 406, Spring 287 | Similar size. |
-| Biology data (Chl-a, absorption) | Yes | **No.** Not in the public archive; we checked both linked datasets. | **Yes, a lot**, especially in spring. |
-| Calibrated SSC | Yes | No (only an uncalibrated echo-strength proxy, tested separately) | Moderate. |
-| Salinity source | CTD on the same platform | CTD at P1, 1.2 km away (the P2 salinity sensor failed) | Minor. Salinity changes slowly. |
+| Location | South San Francisco Bay shoals, platforms P1 and P1O | Same campaigns, platform P2 (the public dataset) | Some: a different site means a somewhat different sediment supply. |
+| Seasons | Summer 2018, Winter 2019, Spring 2019 | Same | None |
+| LISST height | 15 cm above the bed | 35 cm above the bed | Probably minor: the paper found 15 and 45 cm similar. |
+| LISST sampling | Once per hour | Every minute, averaged over each 14-min ADV burst | Each data point here is less noisy. |
+| Platform layout | LISST about 30 m from the current meters | Same platform | None |
+| Rows per season (all regimes) | Summer 443, Winter 570, Spring 331 (sum of Table 1 N) | Summer 427, Winter 406, Spring 287 | Similar size |
+| Biology data (Chl-a, absorption) | Yes | No: not in the public archive or the second linked dataset | Large, especially in spring |
+| Calibrated SSC | Yes | No (an uncalibrated acoustic backscatter proxy is tested separately) | Moderate |
+| Salinity source | CTD on the instrument frame about 30 m from the optics platform | CTD at P1, 1.2 km away (the P2 salinity sensor failed) | Minor: salinity changes slowly |
 
----
+## 3. How floc size was computed
 
-## 3. How the target (floc size) was computed
-
-| Step | The paper (§2.2) | Us |
+| Step | The paper (§2.2) | This project |
 |---|---|---|
 | Size measure | Mean diameter from the volume distribution | Same (volume-weighted mean) |
-| Spike removal | "Spikes ≥40% across consecutive bins in the 5 smallest / 5 largest bins" | Same rule, read as *isolated* spikes (one bin ≥40% above its neighbours) |
-| Low-quality optics | Not stated | Dropped minutes with transmission < 0.1 (saturated sensor). Flagged 0.1–0.3. |
-| Biofouling | Instruments cleaned; not modelled | Bursts within 3 days before a cleaning are flagged (not dropped) |
-| Resulting typical floc size | Fig. 1: Summer ~80–100, Winter ~70, Spring ~100–200 µm | Medians: Summer 83, Winter 62, Spring 106 µm (**consistent**) |
-
-> Note: our first spike rule also cut everything beyond a spike, which removed real large flocs and
-> pushed Spring down to ~48 µm. We corrected it to match the paper. See `report.md` §8.
-
----
+| Spike removal | "Spikes of 40% or greater across consecutive size bins" in the 5 smallest and 5 largest bins | Same rule, applied to isolated spikes (one bin at least 40% above its neighbours) |
+| Low-quality optics | Not stated | Minutes with transmission below 0.1 (saturated sensor) dropped; 0.1 to 0.3 flagged |
+| Biofouling | Instruments cleaned; not modelled | Bursts within 3 days before a cleaning flagged, not dropped |
+| Typical floc size | Fig. 1: Summer about 80 to 100, Winter about 70, Spring 100 to 200 µm | Medians: Summer 83, Winter 62, Spring 106 µm (consistent) |
 
 ## 4. Features
 
-| Feature | Paper | Us | How we computed it |
+| Feature | Paper | This project | How it is computed here |
 |---|---|---|---|
-| u_b (waves) | ✔ | ✔ | From the ADV velocity spectrum in the wave band; cross-checked with wave theory (r ≈ 0.95) |
-| ū (current) | ✔ | ✔ | Burst-mean current along the main tidal axis, + = flood (verified against the rising tide) |
+| u_b (waves) | ✔ | ✔ | From the ADV velocity spectrum in the wave band; checked against linear wave theory (r ≈ 0.95) |
+| ū (current) | ✔ | ✔ | Burst-mean current along the main tidal axis, + = flood (checked against the rising tide) |
 | ū₄ (lagged current) | ✔ | ✔ | Current from the burst 4 h earlier, matched by time |
-| ε (turbulence) | ✔ | ✔ | Turbulence spectrum fit (simplified version of the paper's method) |
+| ε (turbulence) | ✔ | ✔ | Fit to the turbulence spectrum (a simpler form of the paper's method) |
 | T | ✔ | ✔ | Same-platform CTD |
 | S | ✔ | ✔ | P1 CTD |
 | Chl-a | ✔ | ✘ | Not available |
 | 3 absorption ratios | ✔ | ✘ | Not available |
-| c̄ (SSC) | ✔ | ✘ (proxy tested separately) | — |
+| c̄ (SSC) | ✔ | ✘ (proxy tested separately) | n/a |
 | **Total** | **11** | **6** | |
 
----
+## 5. Regime split
 
-## 5. Regime split (resuspension / advection / mixed)
+Same rule as the paper: over each 12-hour window, is sediment concentration better explained by
+the waves (R) or by the lagged tide (A)? Mixed (M) if neither is better by 20%.
 
-Same rule as the paper: over each 12-hour window, is sediment concentration better explained
-by the waves (R) or by the lagged tide (A)? Mixed (M) if neither wins by 20%.
-
-| Season | Paper R / A / M | Ours R / A / M (labelled bursts) |
+| Season | Paper R / A / M | This project R / A / M (labelled bursts) |
 |---|---|---|
 | Summer | 40% / 45% / 15% | 11% / 76% / 14% |
 | Winter | 47% / 45% / 7% | 26% / 66% / 8% |
 | Spring | 29% / 57% / 14% | 24% / 61% / 15% |
 
-**Difference:** our site/height looks much more "advection" (tide-carried mud) than the paper's,
-especially in summer. This leaves our resuspension groups small (42–84 rows), so their results
-are fragile.
-
----
+This site and height are much more advection-dominated than the paper's, especially in summer.
+The resuspension groups are therefore small (42 to 84 rows) and their results are uncertain.
 
 ## 6. Method
 
-| | The paper | Class paper | Us |
+| | The paper | Class paper | This project |
 |---|---|---|---|
 | Models | LASSO + RFECV | Random Forest, SVR | All three |
-| Data split for scoring | Not a held-out test. Table 1 r² is the regression fit itself. | Random 70/30 split of hourly data | Contiguous multi-day blocks held out, with 12 h gaps removed between train and test |
-| Fit separately by | Season × regime | All data together | Season × regime, plus all seasons pooled |
-| Extra stress test | — | — | Train on 2 seasons, predict the 3rd |
-| Feature elimination rule | Drop if removing it lowers r² by < 0.02 | RF importance, keep top 4 | Same as the paper |
+| Scoring | No held-out test; Table 1 r² is the regression fit | Random 70/30 split of hourly data | Contiguous multi-day blocks held out, with a 12 h gap between training and test data |
+| Fitted separately by | Season and regime | All data together | Season and regime, plus all seasons pooled |
+| Additional test | n/a | n/a | Train on two seasons, predict the third |
+| Feature elimination | Drop a feature if removing it lowers r² by less than 0.02 | RF importance, keep the top 4 | Same as the paper |
 
----
+## 7. LASSO results by season and regime
 
-## 7. Results side by side: LASSO, season × regime
+The paper's r² is in-sample (Table 1). Shown alongside: this project's in-sample r² (same type)
+and its best out-of-sample r² (best of LASSO, RF and SVR on held-out time blocks).
+Signs: (+) larger flocs when the feature increases, (−) smaller.
 
-"Paper r²" is in-sample (from the paper's Table 1). For a fair comparison we show **our in-sample
-r²** (same type) and **our honest out-of-sample r²** (best of LASSO/RF/SVR on held-out time blocks).
-Signs in brackets: (+) bigger flocs when the feature goes up, (−) smaller.
-
-| Season · Regime | Paper: selected features (−Δr²) | Paper r² (in-sample) | Our selected features | Our r² in-sample | Our best r² out-of-sample |
+| Season, regime | Paper: selected features (−Δr²) | Paper r² (in-sample) | This project: selected features | In-sample r² | Best out-of-sample r² |
 |---|---|---|---|---|---|
-| **Summer · R** | u_b (−) .38, ū₄ (+) .13 | 0.51 | none survived | 0.00 | −0.02 |
-| **Summer · A** | u_b (−) .16, ū (+) .02 | 0.15 | none survived | 0.00 | −0.22 |
-| **Summer · M** | ū₄ (+) .26, u_b (−) .17, ū (+) .06, S (+) .03 | 0.33 | u_b (−) .10, ū (+) .07, ū₄ (−) .03 | 0.22 | −0.09 |
-| **Winter · R** | u_b (−) .26, ū₄ (+) .10 | 0.45 | none survived | 0.00 | −0.11 |
-| **Winter · A** | c̄ (−) .09, ū₄ (+) .07, u_b (−) .03, a450/a676 (+) .03 | 0.50 | ū₄ (+) .17, S (+) .05 | 0.30 | **0.39** |
-| **Winter · M** | u_b (−) .17, ū (−) .06, ū₄ (+) .04, a676/a650, Chl-a | 0.65 | too few rows (27) | — | — |
-| **Spring · R** | **T (+) .42, Chl-a (+) .23**, u_b (−) .07 | 0.46 | u_b (−) .32, ū₄ (+) .10, ū (−) .04 | 0.79* | **0.61*** |
-| **Spring · A** | T (+) .11, Chl-a (+) .09, a450/a676, c̄ | 0.15 | ū₄ (+) .09, S (+) .07 | 0.18 | −0.15 |
-| **Spring · M** | Chl-a (+) .11, T (+) .11, c̄ (+) .04, u_b (−) .03 | 0.25 | too few rows (28) | — | — |
+| **Summer R** | u_b (−) .38, ū₄ (+) .13 | 0.51 | none selected | 0.00 | −0.02 |
+| **Summer A** | u_b (−) .16, ū (+) .02 | 0.15 | none selected | 0.00 | −0.22 |
+| **Summer M** | ū₄ (+) .26, u_b (−) .17, ū (+) .06, S (+) .03 | 0.33 | u_b (−) .10, ū (+) .07, ū₄ (−) .03 | 0.22 | −0.09 |
+| **Winter R** | u_b (−) .26, ū₄ (+) .10 | 0.45 | none selected | 0.00 | −0.11 |
+| **Winter A** | c̄ (−) .09, ū₄ (+) .07, u_b (−) .03, a450/a676 (+) .03 | 0.50 | ū₄ (+) .17, S (+) .05 | 0.30 | **0.39** |
+| **Winter M** | u_b (−) .17, ū (−) .06, ū₄ (+) .04, a676/a650, Chl-a | 0.65 | too few rows (27) | n/a | n/a |
+| **Spring R** | **T (+) .42, Chl-a (+) .23**, u_b (−) .07 | 0.46 | u_b (−) .32, ū₄ (+) .10, ū (−) .04 | 0.79* | **0.61*** |
+| **Spring A** | T (+) .11, Chl-a (+) .09, a450/a676, c̄ | 0.15 | ū₄ (+) .09, S (+) .07 | 0.18 | −0.15 |
+| **Spring M** | Chl-a (+) .11, T (+) .11, c̄ (+) .04, u_b (−) .03 | 0.25 | too few rows (28) | n/a | n/a |
 
-\* Only 43 rows over 8 days, so the uncertainty is wide (95% CI 0.14–0.74).
-"None survived" = the LASSO switched off every feature, because none of them helped predict
+\* Only 43 rows over 8 days, so the uncertainty is wide (95% CI 0.14 to 0.74).
+"None selected": the LASSO set every coefficient to zero, because no feature helped predict
 held-out days.
 
-**How to read this:**
-- Where we have enough data, **the same physical features show up with the same signs**:
-  waves (−), lagged tide (+). Winter·A and Spring·R are the clearest matches.
-- The paper's subsets where **biology dominates** (all of spring) can't be reproduced, because we
-  don't have those measurements.
-- Several of our resuspension subsets select nothing, partly because they're small (our site is
-  more advection-dominated).
+- Where there is enough data, the same physical features appear with the same signs: waves (−),
+  lagged tide (+). Winter A and Spring R match most closely.
+- The paper's spring subsets, where biology dominates, cannot be reproduced without those
+  measurements.
+- Several resuspension subsets select no features, partly because they are small.
 
----
+## 8. Feature importance
 
-## 8. Which features matter most
-
-| Feature | Paper (Table 1 + text) | Class paper (RF importance for d50) | Ours (RF permutation importance, all seasons) |
+| Feature | Paper (Table 1 and text) | Class paper (RF importance for d50) | This project (RF permutation importance, all seasons) |
 |---|---|---|---|
-| u_b (waves) | **#1 most reliable**, negative | #2 (0.06) | **#1–2**, negative |
-| ū₄ (lagged tide) | Consistent positive | not used | **#1–2**, positive |
+| u_b (waves) | Most reliable, negative | 2nd (0.06) | 1st or 2nd, negative |
+| ū₄ (lagged tide) | Consistent, positive | not used | 1st or 2nd, positive |
 | ū (current) | Minor | last (0.03) | Minor |
-| T | Important **in spring only** (biology proxy) | #4 (0.05) | Weak within a season; matters only when seasons are pooled |
-| S | Marginal | **#1 (0.72)** | Weak within a season; matters only when seasons are pooled |
+| T | Important in spring only (biology proxy) | joint 3rd (0.05) | Weak within a season; matters only when seasons are pooled |
+| S | Marginal | 1st (0.72) | Weak within a season; matters only when seasons are pooled |
 | ε | Not selected | not used | Near zero |
-| Chl-a / absorption | Important in spring | weak | not available |
+| Chl-a, absorption | Important in spring | weak | not available |
 
-**Takeaway:** we agree with the paper (waves + lagged tide), and **disagree with the class paper**,
-whose salinity-first result appears to be an artefact. Salinity changes slowly over the deployment,
-so with a random split it acts like a "clock" that tells the model which week a sample came from.
+This project agrees with the paper (waves and lagged tide) and not with the class paper's
+salinity-first ranking. That ranking is probably an artefact: salinity changes slowly over each
+deployment, so with a random split it tells the model which week a sample came from.
 
----
+## 9. Effect of the scoring method on r²
 
-## 9. Why our headline numbers look lower: the r² ladder
+Same data and features, all seasons pooled, scored four ways:
 
-Same data and features, scored four ways (all seasons pooled, Random Forest):
-
-| How it's scored | r² | Like… |
+| Scoring method | Model | r² |
 |---|---|---|
-| In-sample LASSO fit (the paper's style) | 0.43 | Grading a student on the homework they copied |
-| Random 70/30 split (the class paper's style) | 0.64 | Grading on questions that are near-copies of the homework |
-| Held-out time blocks (ours) | **0.34** | Grading on next week's exam |
-| Train on two seasons, predict the third (ours) | **−0.1 to −4.6** | Grading on a different subject |
+| In-sample fit (the paper's method) | LASSO | 0.43 |
+| Random 70/30 split (the class paper's method) | Random Forest | 0.64 |
+| Held-out time blocks | Random Forest | **0.34** |
+| Train on two seasons, predict the third | Random Forest | **−0.1 to −4.6** |
 
-And within a single season, held-out blocks give **≤ 0** for every model.
+Within a single season, held-out time blocks give 0 or below for every model.
 
-So the paper's 0.15–0.65 and the class paper's 0.81 are **not wrong**; they measure an easier
-thing. If our features are scored the paper's way, we land in the lower half of its range, which
-is expected given we have 6 of its 11 inputs.
+The paper's 0.15 to 0.65 and the class paper's 0.81 are correct for their methods; those methods
+measure an easier task. Scored the paper's way, this project falls in the lower half of the
+paper's range, as expected with 6 of its 11 inputs.
 
----
+## 10. Conclusions compared
 
-## 10. Conclusions side by side
-
-| Topic | The paper concludes | We find |
+| Topic | The paper | This project |
 |---|---|---|
-| Waves break flocs | Yes, strongest in resuspension periods | **Confirmed** (negative u_b effect in every season except where data are thin) |
-| Lagged tide brings larger flocs from upstream | Yes | **Confirmed in Winter and Spring**; opposite sign in Summer at our site |
-| Biology matters in spring | Yes (T, Chl-a) | Can't test; no biology data. Spring is where our physics-only model is weakest overall. |
-| Turbulence (ε) predicts floc size | No | **Agree**: no help |
-| Salinity | Marginal | **Agree** with the paper; disagree with the class paper |
-| Can floc size be *predicted*? | Not the paper's question | **Only weakly from physics.** About a third of the variance across seasons, mostly via the seasonal level; little within a season; fails for an unseen season. |
+| Waves break flocs | Yes, strongest in resuspension periods | Confirmed in Summer and Winter (r = −0.27, −0.30) and in the Spring resuspension subset; near zero across Spring as a whole (r = −0.02) |
+| The lagged tide brings larger flocs from upstream | Yes | Confirmed in Winter and Spring (r = +0.43, +0.37); opposite sign in Summer at this site (r = −0.23) |
+| Biology matters in spring | Yes (T, Chl-a) | Cannot be tested: no biology data |
+| Turbulence (ε) predicts floc size | No | Agrees: no improvement |
+| Salinity | Marginal | Agrees with the paper; disagrees with the class paper |
+| Can floc size be predicted? | Not addressed | Only weakly from physics: about a third of the variation across seasons, mostly the seasonal level; little within a season; no skill for an unseen season |
 
----
+## 11. Implications
 
-## 11. What this means for you
-
-1. **The science checks out.** Our pipeline reproduces the paper's physical story, which is a good
-   sign that features and target are computed sensibly.
-2. **A forecasting model built only on physics is not ready.** It tracks the tide-to-tide ups and
-   downs, but misses multi-day shifts in floc size. Those shifts are probably caused by biology and
-   by where the mud comes from, which we don't measure.
-3. **For a model that lasts years, the biggest wins are new data, not new algorithms:**
-   biology/sediment sensors, more deployments, or an occasional real floc-size measurement to
-   re-anchor the model.
+1. The pipeline reproduces the paper's physical findings, which supports the way the features and
+   the target are computed.
+2. A forecasting model based only on physics is not yet reliable. It follows the tide-to-tide
+   changes but misses multi-day shifts in floc size, which are probably driven by biology and by
+   where the sediment comes from.
+3. For a model that stays accurate over years, new data will help more than a new algorithm:
+   biology and sediment sensors, more deployments, or occasional direct floc-size measurements to
+   correct the model's baseline.

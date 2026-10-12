@@ -1,4 +1,4 @@
-"""Predict floc size for a single standalone burst using the saved pooled models.
+"""Predict floc size for a single burst using the saved pooled models.
 
 Usage:
     from src.predict import predict_one
