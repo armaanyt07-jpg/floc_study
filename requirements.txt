@@ -16,3 +16,6 @@ remotezip==0.12.6
 # Rebuilding the write-up PDF (deliverables/source/build_writeup.py)
 reportlab==5.0.1
 pypdf==6.19.0
+
+# Tests (tests/)
+pytest==8.4.2
